@@ -1,12 +1,15 @@
 import json
 import os
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Literal
 
 import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 load_dotenv()
@@ -28,6 +31,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend_dist"
 
 
 class Task(BaseModel):
@@ -230,11 +235,6 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get("/")
-def root() -> dict[str, str]:
-    return {"service": "DoNext AI API", "status": "ok"}
-
-
 @app.post("/api/donext", response_model=NextTaskResponse)
 async def do_next_task(request: NextTaskRequest) -> NextTaskResponse:
     if not request.tasks:
@@ -248,3 +248,29 @@ async def do_next_task(request: NextTaskRequest) -> NextTaskResponse:
         return await _gemini_recommendation(request)
     except Exception:
         return _fallback_recommendation(request)
+
+
+if FRONTEND_DIST.exists():
+    assets_dir = FRONTEND_DIST / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    @app.get("/", include_in_schema=False)
+    def serve_frontend_index() -> FileResponse:
+        return FileResponse(FRONTEND_DIST / "index.html")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def serve_frontend(full_path: str):
+        if full_path.startswith("api/") or full_path in {
+            "health",
+            "docs",
+            "redoc",
+            "openapi.json",
+        }:
+            raise HTTPException(status_code=404, detail="Not found")
+
+        requested = FRONTEND_DIST / full_path
+        if requested.exists() and requested.is_file():
+            return FileResponse(requested)
+
+        return FileResponse(FRONTEND_DIST / "index.html")

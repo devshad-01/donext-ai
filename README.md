@@ -11,6 +11,8 @@ Hackathon-ready productivity app with:
 
 - `frontend/` – React + Chakra single-page app
 - `backend/` – FastAPI API with Gemini integration and fallback prioritizer
+- `Dockerfile` – single-container production image (frontend + backend)
+- `docker-compose.yml` – local one-command run
 
 ## 1) Backend Setup (FastAPI)
 
@@ -55,7 +57,65 @@ Frontend runs on `http://localhost:5173` and calls backend at `VITE_API_BASE_URL
 - Keep backend and frontend on HTTPS in production.
 - Fallback prioritizer ensures app still responds if Gemini is unavailable.
 
-## 4) Gemini Prompt Logic
+## 4) One-Container Run (Docker)
+
+Create a root `.env` file:
+
+```bash
+GEMINI_API_KEY=your_key_here
+GEMINI_MODEL=gemini-2.0-flash
+CORS_ORIGINS=http://localhost:8000
+```
+
+Run everything with one command:
+
+```bash
+docker compose up --build
+```
+
+Open: `http://localhost:8000`
+
+## 5) Azure Fast Deploy (Azure Web App for Containers)
+
+```bash
+# 1) Variables
+RG=donext-ai-rg
+LOC=eastus
+ACR=donextaiacr$RANDOM
+PLAN=donext-ai-plan
+APP=donext-ai-$RANDOM
+
+# 2) Resource group + ACR
+az group create -n $RG -l $LOC
+az acr create -g $RG -n $ACR --sku Basic
+
+# 3) Build image in ACR
+az acr build -r $ACR -t donext-ai:latest .
+
+# 4) App Service plan + Web App
+az appservice plan create -g $RG -n $PLAN --is-linux --sku B1
+az webapp create -g $RG -p $PLAN -n $APP --deployment-container-image-name $ACR.azurecr.io/donext-ai:latest
+
+# 5) Allow Web App to pull from ACR
+ACR_USER=$(az acr credential show -n $ACR --query username -o tsv)
+ACR_PASS=$(az acr credential show -n $ACR --query passwords[0].value -o tsv)
+az webapp config container set -g $RG -n $APP \
+	--container-image-name $ACR.azurecr.io/donext-ai:latest \
+	--container-registry-url https://$ACR.azurecr.io \
+	--container-registry-user $ACR_USER \
+	--container-registry-password $ACR_PASS
+
+# 6) Runtime secrets/settings
+az webapp config appsettings set -g $RG -n $APP --settings \
+	GEMINI_API_KEY="<your_key>" \
+	GEMINI_MODEL="gemini-2.0-flash" \
+	CORS_ORIGINS="https://$APP.azurewebsites.net"
+
+# 7) Open app
+echo "https://$APP.azurewebsites.net"
+```
+
+## 6) Gemini Prompt Logic
 
 Backend sends tasks + user context in one request and instructs Gemini to:
 
@@ -64,7 +124,7 @@ Backend sends tasks + user context in one request and instructs Gemini to:
 3. Pick one best next task
 4. Return micro-actions, estimated time, and motivation in strict JSON
 
-## 5) Demo Flow
+## 7) Demo Flow
 
 1. Add tasks (deadline/priority/estimate/dependency optional)
 2. Set context (available minutes + energy)
