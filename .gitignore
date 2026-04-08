@@ -1,0 +1,14 @@
+# Root ignores
+**/.env
+**/.venv/
+**/__pycache__/
+**/*.pyc
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# OS/Editor
+.DS_Store
+.vscode/
+.idea/
