@@ -1,65 +1,51 @@
-# DoNext AI – Ultimate Productivity Autopilot
+# DoNext AI
 
-Hackathon-ready productivity app with:
+![React](https://img.shields.io/badge/Frontend-React%20%2B%20Chakra-61dafb?logo=react&logoColor=white)
+![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)
+![Docker](https://img.shields.io/badge/Deploy-Docker-2496ED?logo=docker&logoColor=white)
+![Azure](https://img.shields.io/badge/Hosting-Azure%20Web%20App-0078D4?logo=microsoftazure&logoColor=white)
 
-- React + Chakra UI frontend
-- FastAPI backend
-- Gemini-powered "Do Next Task" prioritization
-- Dynamic context support (deadline, priority, dependencies, available time, energy)
+DoNext AI is a task prioritization application that reduces decision overhead by selecting the best next task and generating actionable micro-steps based on urgency, importance, dependencies, and user context.
 
-## Project Structure
+## Overview
 
-- `frontend/` – React + Chakra single-page app
-- `backend/` – FastAPI API with Gemini integration and fallback prioritizer
-- `Dockerfile` – single-container production image (frontend + backend)
-- `docker-compose.yml` – local one-command run
+Most task apps store tasks but still require users to manually decide what to do next. DoNext AI focuses on execution by returning one concrete next action with reasoning and step-by-step guidance.
 
-## 1) Backend Setup (FastAPI)
+## Core Capabilities
 
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-```
+- Task management with optional deadline, priority, estimate, and dependency fields
+- Context-aware prioritization using available time and energy level
+- AI-generated output including reason, micro-actions, estimated duration, and motivational nudge
+- Urgent task highlighting and one-click completion flow
+- Local persistence via browser storage
+- Built-in deterministic fallback when Gemini is unavailable
 
-Set `GEMINI_API_KEY` in `backend/.env`.
-Set `CORS_ORIGINS` for your deployed frontend URL(s), comma-separated.
+## Technology Stack
 
-Run backend:
+- Frontend: React, TypeScript, Chakra UI, Vite
+- Backend: FastAPI, Pydantic, HTTPX
+- AI Provider: Google Gemini
+- Deployment: Docker, Azure Web App for Containers
+- CI/CD: GitHub Actions
 
-```bash
-uvicorn app.main:app --reload --port 8000
-```
+## Repository Structure
 
-Health check:
+- `frontend/` client application
+- `backend/` API and prioritization logic
+- `Dockerfile` multi-stage production image
+- `docker-compose.yml` local container run
+- `.github/workflows/deploy-azure.yml` automated deployment pipeline
 
-```bash
-curl http://localhost:8000/health
-```
+## Live Endpoints
 
-## 2) Frontend Setup (React + Chakra)
+- Application: `https://donext-ai-api-fgdsa0g4d4gzdngs.eastus-01.azurewebsites.net`
+- Health check: `https://donext-ai-api-fgdsa0g4d4gzdngs.eastus-01.azurewebsites.net/health`
 
-```bash
-cd frontend
-cp .env.example .env
-npm install
-npm run dev
-```
+## Local Development
 
-Frontend runs on `http://localhost:5173` and calls backend at `VITE_API_BASE_URL`.
+### Option A: Docker
 
-## 3) Production Notes
-
-- Never commit real API keys. Use `.env` locally and host-managed secrets in production.
-- Configure `CORS_ORIGINS` to your actual deployed frontend domain.
-- Keep backend and frontend on HTTPS in production.
-- Fallback prioritizer ensures app still responds if Gemini is unavailable.
-
-## 4) One-Container Run (Docker)
-
-Create a root `.env` file:
+Create `.env` in project root:
 
 ```bash
 GEMINI_API_KEY=your_key_here
@@ -67,98 +53,76 @@ GEMINI_MODEL=gemini-2.0-flash
 CORS_ORIGINS=http://localhost:8000
 ```
 
-Run everything with one command:
+Run:
 
 ```bash
 docker compose up --build
 ```
 
-Open: `http://localhost:8000`
+Open `http://localhost:8000`.
 
-## 5) Azure Fast Deploy (Azure Web App for Containers)
+### Option B: Split Frontend and Backend
+
+Backend:
 
 ```bash
-# 1) Variables
-RG=donext-ai-rg
-LOC=eastus
-ACR=donextaiacr$RANDOM
-PLAN=donext-ai-plan
-APP=donext-ai-$RANDOM
-
-# 2) Resource group + ACR
-az group create -n $RG -l $LOC
-az acr create -g $RG -n $ACR --sku Basic
-
-# 3) Build image in ACR
-az acr build -r $ACR -t donext-ai:latest .
-
-# 4) App Service plan + Web App
-az appservice plan create -g $RG -n $PLAN --is-linux --sku B1
-az webapp create -g $RG -p $PLAN -n $APP --deployment-container-image-name $ACR.azurecr.io/donext-ai:latest
-
-# 5) Allow Web App to pull from ACR
-ACR_USER=$(az acr credential show -n $ACR --query username -o tsv)
-ACR_PASS=$(az acr credential show -n $ACR --query passwords[0].value -o tsv)
-az webapp config container set -g $RG -n $APP \
-	--container-image-name $ACR.azurecr.io/donext-ai:latest \
-	--container-registry-url https://$ACR.azurecr.io \
-	--container-registry-user $ACR_USER \
-	--container-registry-password $ACR_PASS
-
-# 6) Runtime secrets/settings
-az webapp config appsettings set -g $RG -n $APP --settings \
-	GEMINI_API_KEY="<your_key>" \
-	GEMINI_MODEL="gemini-2.0-flash" \
-	CORS_ORIGINS="https://$APP.azurewebsites.net"
-
-# 7) Open app
-echo "https://$APP.azurewebsites.net"
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn app.main:app --reload --port 8000
 ```
 
-## 6) Gemini Prompt Logic
+Frontend:
 
-Backend sends tasks + user context in one request and instructs Gemini to:
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-1. Prioritize urgency first, then importance, then effort fit
-2. Respect dependencies
-3. Pick one best next task
-4. Return micro-actions, estimated time, and motivation in strict JSON
+## AI Response Modes
 
-## 7) Demo Flow
+API responses include an `engine` field:
 
-1. Add tasks (deadline/priority/estimate/dependency optional)
-2. Set context (available minutes + energy)
-3. Click **Do Next Task**
-4. Complete micro-actions via button or hotkeys `1-9`
+- `gemini`: recommendation generated by Gemini
+- `fallback`: deterministic local prioritization engine
 
-## Notes
+This provides transparent runtime verification during testing and demos.
 
-- If Gemini key is missing or API fails, backend falls back to a deterministic prioritizer so your demo still works.
-- Designed for fast hackathon iteration and easy deployment.
+## Deployment (Azure + Docker Hub)
 
-## 8) Auto Deploy on Every Push (GitHub Actions)
+Container image:
 
-This repo includes workflow: `.github/workflows/deploy-azure.yml`.
+- `devshad/donext-ai:latest`
 
-On every push to `main`, it will:
-1. Build Docker image
-2. Push image to Docker Hub
-3. Update Azure Web App container image
+Azure Web App container settings:
 
-### Required GitHub repository secrets
+- Registry server URL: `index.docker.io`
+- Image and tag: `devshad/donext-ai:latest`
+- Port: `8000`
 
-Set these in: **GitHub Repo → Settings → Secrets and variables → Actions**
-
-- `DOCKERHUB_USERNAME` (example: `devshad`)
-- `DOCKERHUB_TOKEN` (Docker Hub access token)
-- `AZURE_WEBAPP_NAME` (example: `donext-ai-api-fgdsa0g4d4gzdngs`)
-- `AZURE_WEBAPP_PUBLISH_PROFILE` (download from Azure Web App → Get publish profile)
-
-### One-time Azure app settings
-
-These are not set by workflow and should stay in Azure Web App Environment Variables:
+Azure environment variables:
 
 - `GEMINI_API_KEY`
 - `GEMINI_MODEL=gemini-2.0-flash`
 - `CORS_ORIGINS=https://<your-webapp-domain>`
 - `WEBSITES_PORT=8000`
+
+## CI/CD (GitHub Actions)
+
+Workflow file: `.github/workflows/deploy-azure.yml`
+
+On push to `main`, the pipeline:
+
+1. Builds Docker image
+2. Pushes image to Docker Hub
+3. Deploys image to Azure Web App
+
+Required GitHub repository secrets:
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+- `AZURE_WEBAPP_NAME`
+- `AZURE_WEBAPP_PUBLISH_PROFILE`
