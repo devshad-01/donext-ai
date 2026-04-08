@@ -56,6 +56,7 @@ class NextTaskRequest(BaseModel):
 
 
 class NextTaskResponse(BaseModel):
+    engine: Literal["gemini", "fallback"]
     next_task_id: str
     next_task_title: str
     why: str
@@ -150,6 +151,7 @@ def _fallback_recommendation(request: NextTaskRequest) -> NextTaskResponse:
     ]
 
     return NextTaskResponse(
+        engine="fallback",
         next_task_id=chosen.id,
         next_task_title=chosen.title,
         why="Chosen by urgency first, then importance, effort fit, and dependency readiness.",
@@ -227,6 +229,7 @@ async def _gemini_recommendation(request: NextTaskRequest) -> NextTaskResponse:
     )
 
     parsed = _extract_json(text)
+    parsed.setdefault("engine", "gemini")
     return NextTaskResponse(**parsed)
 
 

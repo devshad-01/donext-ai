@@ -18,7 +18,6 @@ import {
   useToast,
   VStack,
 } from '@chakra-ui/react'
-import { FiCheckCircle, FiClock, FiTrash2, FiZap } from 'react-icons/fi'
 
 type Priority = 'low' | 'medium' | 'high'
 type EnergyLevel = 'low' | 'medium' | 'high'
@@ -200,33 +199,35 @@ function App() {
   }
 
   return (
-    <Box minH="100vh" bg="gray.900" color="gray.100" py={8}>
-      <Container maxW="6xl">
+    <Box minH="100vh" bg="gray.50" color="gray.800" py={{ base: 6, md: 10 }}>
+      <Container maxW="7xl">
         <VStack spacing={6} align="stretch">
-          <Center>
-            <Heading size="2xl" bgGradient="linear(to-r, purple.400, pink.400)" bgClip="text">
-              DoNext AI
-            </Heading>
-          </Center>
+          <Flex justify="space-between" align={{ base: 'start', md: 'end' }} direction={{ base: 'column', md: 'row' }} gap={2}>
+            <Box>
+              <Heading size="xl" color="gray.900">DoNext AI</Heading>
+              <Text mt={1} color="gray.600" fontSize="sm">Decision-first task execution for focused work.</Text>
+            </Box>
+            <Badge colorScheme="blue" variant="subtle" px={3} py={1} borderRadius="full">Live Prioritization</Badge>
+          </Flex>
 
-          <Grid templateColumns={{ base: '1fr', lg: '1.1fr 0.9fr' }} gap={6}>
-            <Box bg="gray.800" borderRadius="2xl" p={5} borderWidth="1px" borderColor="gray.700">
-              <Text fontWeight="bold" mb={4}>Add Task</Text>
+          <Grid templateColumns={{ base: '1fr', lg: '1.15fr 0.85fr' }} gap={5}>
+            <Box bg="white" borderRadius="xl" p={5} borderWidth="1px" borderColor="gray.200" shadow="sm">
+              <Text fontWeight="semibold" mb={4}>Add Task</Text>
               <Stack spacing={3}>
                 <FormControl>
-                  <FormLabel>Task</FormLabel>
-                  <Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Build polished landing UI" />
+                  <FormLabel color="gray.700">Task</FormLabel>
+                  <Input bg="white" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Build polished landing UI" />
                 </FormControl>
 
                 <Grid templateColumns={{ base: '1fr', md: '1fr 1fr 1fr' }} gap={3}>
                   <FormControl>
-                    <FormLabel>Deadline</FormLabel>
-                    <Input type="datetime-local" value={deadline} onChange={(event) => setDeadline(event.target.value)} />
+                    <FormLabel color="gray.700">Deadline</FormLabel>
+                    <Input bg="white" type="datetime-local" value={deadline} onChange={(event) => setDeadline(event.target.value)} />
                   </FormControl>
 
                   <FormControl>
-                    <FormLabel>Priority</FormLabel>
-                    <Select value={priority} onChange={(event) => setPriority(event.target.value as Priority)}>
+                    <FormLabel color="gray.700">Priority</FormLabel>
+                    <Select bg="white" value={priority} onChange={(event) => setPriority(event.target.value as Priority)}>
                       <option value="low">Low</option>
                       <option value="medium">Medium</option>
                       <option value="high">High</option>
@@ -234,14 +235,14 @@ function App() {
                   </FormControl>
 
                   <FormControl>
-                    <FormLabel>Est. mins</FormLabel>
-                    <Input type="number" min={5} value={estimatedMinutes} onChange={(event) => setEstimatedMinutes(event.target.value)} placeholder="45" />
+                    <FormLabel color="gray.700">Est. mins</FormLabel>
+                    <Input bg="white" type="number" min={5} value={estimatedMinutes} onChange={(event) => setEstimatedMinutes(event.target.value)} placeholder="45" />
                   </FormControl>
                 </Grid>
 
                 <FormControl>
-                  <FormLabel>Depends on task (optional)</FormLabel>
-                  <Select value={dependsOnTaskId} onChange={(event) => setDependsOnTaskId(event.target.value)}>
+                  <FormLabel color="gray.700">Depends on task (optional)</FormLabel>
+                  <Select bg="white" value={dependsOnTaskId} onChange={(event) => setDependsOnTaskId(event.target.value)}>
                     <option value="">No dependency</option>
                     {pendingTasks.map((task) => (
                       <option key={task.id} value={task.id}>{task.title}</option>
@@ -249,49 +250,48 @@ function App() {
                   </Select>
                 </FormControl>
 
-                <Button colorScheme="purple" onClick={addTask}>Add Task</Button>
+                <Button colorScheme="blue" onClick={addTask}>Add Task</Button>
               </Stack>
             </Box>
 
-            <Box bg="gray.800" borderRadius="2xl" p={5} borderWidth="1px" borderColor="gray.700">
-              <Text fontWeight="bold" mb={4}>Your Context</Text>
+            <Box bg="white" borderRadius="xl" p={5} borderWidth="1px" borderColor="gray.200" shadow="sm">
+              <Text fontWeight="semibold" mb={4}>Your Context</Text>
               <Stack spacing={3}>
                 <FormControl>
-                  <FormLabel>Available time (minutes)</FormLabel>
-                  <Input type="number" min={5} value={availableMinutes} onChange={(event) => setAvailableMinutes(event.target.value)} />
+                  <FormLabel color="gray.700">Available time (minutes)</FormLabel>
+                  <Input bg="white" type="number" min={5} value={availableMinutes} onChange={(event) => setAvailableMinutes(event.target.value)} />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Energy level</FormLabel>
-                  <Select value={energyLevel} onChange={(event) => setEnergyLevel(event.target.value as EnergyLevel)}>
+                  <FormLabel color="gray.700">Energy level</FormLabel>
+                  <Select bg="white" value={energyLevel} onChange={(event) => setEnergyLevel(event.target.value as EnergyLevel)}>
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
                   </Select>
                 </FormControl>
-                <Text color="gray.400" fontSize="sm">Context is sent on every Do Next call so recommendations adapt dynamically.</Text>
+                <Text color="gray.500" fontSize="sm">Context is included on every recommendation request.</Text>
               </Stack>
             </Box>
           </Grid>
 
           <Center>
             <Button
-              leftIcon={<FiZap />}
               size="lg"
               px={10}
-              colorScheme="pink"
+              colorScheme="blue"
               onClick={requestDoNext}
               isLoading={loading}
-              loadingText="Thinking..."
+              loadingText="Analyzing..."
             >
               Do Next Task
             </Button>
           </Center>
 
-          <Grid templateColumns={{ base: '1fr', lg: '1fr 1fr' }} gap={6}>
-            <Box bg="gray.800" borderRadius="2xl" p={5} borderWidth="1px" borderColor="gray.700">
-              <Text fontWeight="bold" mb={4}>Task List</Text>
+          <Grid templateColumns={{ base: '1fr', lg: '1fr 1fr' }} gap={5}>
+            <Box bg="white" borderRadius="xl" p={5} borderWidth="1px" borderColor="gray.200" shadow="sm">
+              <Text fontWeight="semibold" mb={4}>Task List</Text>
               <Stack spacing={3}>
-                {tasks.length === 0 && <Text color="gray.400">No tasks yet. Add one to begin.</Text>}
+                {tasks.length === 0 && <Text color="gray.500">No tasks yet. Add one to begin.</Text>}
 
                 {tasks.map((task) => {
                   const urgent = !task.done && isUrgent(task.deadline)
@@ -302,33 +302,29 @@ function App() {
                       align="center"
                       p={3}
                       borderRadius="lg"
-                      bg={urgent ? 'red.900' : 'gray.700'}
+                      bg={task.done ? 'gray.50' : 'white'}
                       borderWidth="1px"
-                      borderColor={urgent ? 'red.500' : 'gray.600'}
+                      borderColor={urgent ? 'orange.300' : 'gray.200'}
                     >
                       <Box>
-                        <HStack spacing={2}>
-                          <Text textDecoration={task.done ? 'line-through' : 'none'}>{task.title}</Text>
-                          {urgent && (
-                            <Badge colorScheme="red" display="flex" alignItems="center" gap={1}>
-                              <FiClock /> Urgent
-                            </Badge>
-                          )}
+                        <HStack spacing={2} mb={1}>
+                          <Text fontWeight="medium" color="gray.800" textDecoration={task.done ? 'line-through' : 'none'}>{task.title}</Text>
+                          {urgent && <Badge colorScheme="orange">Urgent</Badge>}
                           <Badge colorScheme={task.priority === 'high' ? 'red' : task.priority === 'medium' ? 'yellow' : 'green'}>
                             {task.priority}
                           </Badge>
                         </HStack>
-                        <Text fontSize="xs" color="gray.300">
+                        <Text fontSize="xs" color="gray.500">
                           {task.deadline ? `Due: ${new Date(task.deadline).toLocaleString()}` : 'No deadline'}
                           {task.estimatedMinutes ? ` • ${task.estimatedMinutes} mins` : ''}
                         </Text>
                       </Box>
                       <HStack>
-                        <Button size="sm" leftIcon={<FiCheckCircle />} onClick={() => toggleDone(task.id)}>
+                        <Button size="sm" variant="outline" colorScheme={task.done ? 'gray' : 'blue'} onClick={() => toggleDone(task.id)}>
                           {task.done ? 'Undo' : 'Done'}
                         </Button>
                         <Button size="sm" colorScheme="red" variant="ghost" onClick={() => deleteTask(task.id)}>
-                          <FiTrash2 />
+                          Delete
                         </Button>
                       </HStack>
                     </Flex>
@@ -337,27 +333,28 @@ function App() {
               </Stack>
             </Box>
 
-            <Box bg="gray.800" borderRadius="2xl" p={5} borderWidth="1px" borderColor="gray.700">
-              <Text fontWeight="bold" mb={4}>AI Output</Text>
-              {!aiResult && <Text color="gray.400">Click “Do Next Task” to get your optimized next move.</Text>}
+            <Box bg="white" borderRadius="xl" p={5} borderWidth="1px" borderColor="gray.200" shadow="sm">
+              <Text fontWeight="semibold" mb={4}>AI Output</Text>
+              {!aiResult && <Text color="gray.500">Click “Do Next Task” to get your optimized next move.</Text>}
 
               {aiResult && (
                 <Stack spacing={3}>
-                  <Heading size="md">{aiResult.next_task_title}</Heading>
-                  <Text color="gray.300">{aiResult.why}</Text>
-                  <Badge alignSelf="flex-start" colorScheme="purple">Estimated: {aiResult.estimated_minutes} mins</Badge>
+                  <Heading size="md" color="gray.900">{aiResult.next_task_title}</Heading>
+                  <Text color="gray.600">{aiResult.why}</Text>
+                  <Badge alignSelf="flex-start" colorScheme="blue" variant="subtle">Estimated: {aiResult.estimated_minutes} mins</Badge>
 
                   <Box>
-                    <Text mb={2} fontWeight="semibold">Micro-actions (hotkeys 1-9)</Text>
+                    <Text mb={2} fontWeight="semibold" color="gray.800">Micro-actions (hotkeys 1-9)</Text>
                     <VStack align="stretch" spacing={2}>
                       {aiResult.steps.map((step, index) => (
-                        <HStack key={step} justify="space-between" bg="gray.700" p={2} borderRadius="md">
-                          <Text textDecoration={doneSteps[index] ? 'line-through' : 'none'}>
+                        <HStack key={step} justify="space-between" bg="gray.50" p={2.5} borderRadius="md" borderWidth="1px" borderColor="gray.200">
+                          <Text color="gray.700" textDecoration={doneSteps[index] ? 'line-through' : 'none'}>
                             {index + 1}. {step}
                           </Text>
                           <Button
                             size="xs"
-                            colorScheme={doneSteps[index] ? 'green' : 'purple'}
+                            colorScheme={doneSteps[index] ? 'green' : 'blue'}
+                            variant={doneSteps[index] ? 'solid' : 'outline'}
                             onClick={() => setDoneSteps((current) => ({ ...current, [index]: !current[index] }))}
                           >
                             {doneSteps[index] ? 'Done' : 'Mark Done'}
@@ -367,7 +364,7 @@ function App() {
                     </VStack>
                   </Box>
 
-                  <Text color="pink.200" fontWeight="medium">{aiResult.motivation}</Text>
+                  <Text color="gray.700" fontWeight="medium">{aiResult.motivation}</Text>
                 </Stack>
               )}
             </Box>

@@ -135,3 +135,30 @@ Backend sends tasks + user context in one request and instructs Gemini to:
 
 - If Gemini key is missing or API fails, backend falls back to a deterministic prioritizer so your demo still works.
 - Designed for fast hackathon iteration and easy deployment.
+
+## 8) Auto Deploy on Every Push (GitHub Actions)
+
+This repo includes workflow: `.github/workflows/deploy-azure.yml`.
+
+On every push to `main`, it will:
+1. Build Docker image
+2. Push image to Docker Hub
+3. Update Azure Web App container image
+
+### Required GitHub repository secrets
+
+Set these in: **GitHub Repo → Settings → Secrets and variables → Actions**
+
+- `DOCKERHUB_USERNAME` (example: `devshad`)
+- `DOCKERHUB_TOKEN` (Docker Hub access token)
+- `AZURE_WEBAPP_NAME` (example: `donext-ai-api-fgdsa0g4d4gzdngs`)
+- `AZURE_WEBAPP_PUBLISH_PROFILE` (download from Azure Web App → Get publish profile)
+
+### One-time Azure app settings
+
+These are not set by workflow and should stay in Azure Web App Environment Variables:
+
+- `GEMINI_API_KEY`
+- `GEMINI_MODEL=gemini-2.0-flash`
+- `CORS_ORIGINS=https://<your-webapp-domain>`
+- `WEBSITES_PORT=8000`

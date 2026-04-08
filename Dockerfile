@@ -1,7 +1,15 @@
 FROM node:22-alpine AS frontend-builder
 WORKDIR /frontend
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm config set fetch-retries 5 \
+	&& npm config set fetch-retry-factor 2 \
+	&& npm config set fetch-retry-mintimeout 20000 \
+	&& npm config set fetch-retry-maxtimeout 120000 \
+	&& npm config set fetch-timeout 300000 \
+	&& npm config set registry https://registry.npmjs.org/ \
+	&& ok=0 \
+	&& for i in 1 2 3; do npm ci --no-audit --no-fund && ok=1 && break || (echo "npm ci failed (attempt $i), retrying..." && sleep 12); done \
+	&& if [ "$ok" -ne 1 ]; then echo "npm ci failed after retries; trying npm install fallback"; npm install --no-audit --no-fund; fi
 COPY frontend/ ./
 ARG VITE_API_BASE_URL=
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
